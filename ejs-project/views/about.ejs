@@ -1,0 +1,149 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<!-- ABOUT HERO -->
+<section class="hero" style="padding: 80px 0">
+  <div class="container">
+    <div class="hero-content">
+      <h1>About Premium Store</h1>
+      <p>
+        We're passionate about delivering exceptional products and experiences
+        to our customers worldwide.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="container" style="padding: 80px 0">
+  <!-- MISSION & VISION -->
+  <div
+    style="
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 4rem;
+    "
+  >
+    <div
+      style="
+        background: var(--bg-white);
+        padding: 2.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+      "
+    >
+      <div style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem">
+        <i class="fas fa-bullseye"></i>
+      </div>
+      <h3>Our Mission</h3>
+      <p style="color: var(--text-light); line-height: 1.8">
+        To provide premium quality products that enhance the lives of our
+        customers. We believe in excellence, sustainability, and customer
+        satisfaction.
+      </p>
+    </div>
+    <div
+      style="
+        background: var(--bg-white);
+        padding: 2.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+      "
+    >
+      <div style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem">
+        <i class="fas fa-lightbulb"></i>
+      </div>
+      <h3>Our Vision</h3>
+      <p style="color: var(--text-light); line-height: 1.8">
+        To become the most trusted ecommerce platform known for innovation,
+        quality, and exceptional customer service globally.
+      </p>
+    </div>
+  </div>
+
+  <!-- VALUES -->
+  <div
+    style="
+      background: var(--bg-light);
+      padding: 3rem;
+      border-radius: 16px;
+      margin-bottom: 4rem;
+    "
+  >
+    <h2 style="text-align: center; margin-bottom: 3rem">Our Values</h2>
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      "
+    >
+      <div style="text-align: center">
+        <div
+          style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem"
+        >
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h5>Quality</h5>
+        <p style="color: var(--text-muted)">
+          We never compromise on product quality and craftsmanship
+        </p>
+      </div>
+      <div style="text-align: center">
+        <div
+          style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem"
+        >
+          <i class="fas fa-handshake"></i>
+        </div>
+        <h5>Trust</h5>
+        <p style="color: var(--text-muted)">
+          Building long-term relationships with our customers
+        </p>
+      </div>
+      <div style="text-align: center">
+        <div
+          style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem"
+        >
+          <i class="fas fa-leaf"></i>
+        </div>
+        <h5>Sustainability</h5>
+        <p style="color: var(--text-muted)">
+          Committed to environmentally responsible practices
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div
+    style="
+      background: linear-gradient(
+        135deg,
+        var(--text-dark) 0%,
+        var(--primary-light) 100%
+      );
+      color: white;
+      padding: 3rem;
+      border-radius: 16px;
+      text-align: center;
+    "
+  >
+    <h2 style="margin-bottom: 1rem">Ready to Shop?</h2>
+    <p style="margin-bottom: 2rem; font-size: 1.1rem">
+      Explore our collection of premium products today
+    </p>
+    <a
+      href="/"
+      class="btn-primary"
+      style="
+        display: inline-block;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+      "
+    >
+      <i class="fas fa-shopping-bag"></i> Start Shopping
+    </a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

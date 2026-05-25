@@ -1,0 +1,62 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<div class="container" style="padding: 40px 0; max-width: 700px;">
+  <!-- PAGE HEADER -->
+  <div style="margin-bottom: 2rem;">
+    <h1><i class="fas fa-edit"></i> Edit Product</h1>
+    <p style="color: var(--text-muted);">Update product information</p>
+  </div>
+
+  <!-- FORM CARD -->
+  <div style="background: var(--bg-white); border-radius: 16px; padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
+    <form action="/edit-product/<%= product._id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <!-- PRODUCT NAME -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-tag"></i> Product Name *</label>
+        <input type="text" name="name" class="form-input" value="<%= product.name %>" required />
+      </div>
+
+      <!-- PRICE -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-rupee-sign"></i> Price (₹) *</label>
+          <input type="number" name="price" class="form-input" value="<%= product.price %>" min="0" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-tag"></i> Category Tag</label>
+          <input type="text" name="tag" class="form-input" value="<%= product.tag %>" />
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-align-left"></i> Description *</label>
+        <textarea name="description" class="form-input" rows="4" required style="resize: vertical;"><%= product.description %></textarea>
+      </div>
+
+      <!-- IMAGE URL -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-image"></i> Product Image URL</label>
+        <input type="url" name="image" class="form-input" value="<%= product.image %>" />
+        <% if (product.image) { %>
+          <div style="margin-top: 1rem; max-width: 200px; border-radius: 8px; overflow: hidden;">
+            <img src="<%= product.image %>" alt="Current" style="width: 100%; height: auto;">
+          </div>
+        <% } %>
+      </div>
+
+      <!-- BUTTONS -->
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn-primary" style="flex: 1; padding: 1rem; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;">
+          <i class="fas fa-save"></i> Update Product
+        </button>
+        <a href="/" class="btn-secondary" style="flex: 1; padding: 1rem; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 700;">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

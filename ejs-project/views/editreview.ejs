@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<div class="container" style="padding: 40px 0; max-width: 700px;">
+  <!-- PAGE HEADER -->
+  <div style="margin-bottom: 2rem;">
+    <h1><i class="fas fa-star"></i> Edit Your Review</h1>
+    <p style="color: var(--text-muted);">Update your review</p>
+  </div>
+
+  <!-- FORM CARD -->
+  <div style="background: var(--bg-white); border-radius: 16px; padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
+    <form action="/edit-review/<%= review._id %>/<%= productId %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <!-- RATING -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-star"></i> Your Rating</label>
+        <div style="display: flex; gap: 1rem;">
+          <% for(let i = 1; i <= 5; i++) { %>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="rating" value="<%= i %>" <%= review.rating === i ? 'checked' : '' %> required style="width: 20px; height: 20px; cursor: pointer;">
+              <% for(let j = 0; j < i; j++) { %>
+                <i class="fas fa-star" style="color: #ffc107;"></i>
+              <% } %>
+            </label>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- REVIEW TEXT -->
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-comment"></i> Your Review</label>
+        <textarea name="text" class="form-input" placeholder="Share your thoughts..." rows="5" required style="resize: vertical;"><%= review.text %></textarea>
+      </div>
+
+      <!-- BUTTONS -->
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn-primary" style="flex: 1; padding: 1rem; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;">
+          <i class="fas fa-save"></i> Update Review
+        </button>
+        <a href="javascript:history.back()" class="btn-secondary" style="flex: 1; padding: 1rem; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 700;">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,145 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1>Discover Premium Quality</h1>
+      <p>Explore our exclusive collection of curated products, handpicked for excellence and style.</p>
+      <div class="hero-buttons">
+        <a href="#products" class="btn-primary">
+          <i class="fas fa-shopping-bag"></i> Shop Now
+        </a>
+        <a href="/about" class="btn-secondary">
+          <i class="fas fa-info-circle"></i> Learn More
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROMO SECTION -->
+<section style="background: var(--bg-white); padding: 2rem 0; border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; text-align: center;">
+      <div>
+        <i class="fas fa-shipping-fast" style="font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+        <h6>Fast Shipping</h6>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Free shipping on orders over ₹5000</p>
+      </div>
+      <div>
+        <i class="fas fa-undo" style="font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+        <h6>Easy Returns</h6>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">30-day return policy</p>
+      </div>
+      <div>
+        <i class="fas fa-lock" style="font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+        <h6>Secure Payment</h6>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">100% secure transactions</p>
+      </div>
+      <div>
+        <i class="fas fa-headset" style="font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+        <h6>24/7 Support</h6>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Dedicated customer service</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS SECTION -->
+<section class="products-section" id="products">
+  <div class="container">
+    <!-- SECTION HEADER -->
+    <div class="section-title">
+      <h2>Our Collection</h2>
+      <p style="color: var(--text-muted); font-size: 1.1rem;">Discover our finest selection of premium products</p>
+    </div>
+
+    <!-- ALERT -->
+    <% if (message) { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> <%= message %>
+      </div>
+    <% } %>
+
+    <!-- PRODUCTS GRID -->
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <h3 class="empty-state-title">No Products Found</h3>
+        <p class="empty-state-text">We're currently updating our inventory. Check back soon!</p>
+        <a href="/" class="btn-primary">
+          <i class="fas fa-refresh"></i> Refresh
+        </a>
+      </div>
+    <% } else { %>
+      <div class="products-grid">
+        <% products.forEach(product => { %>
+          <div class="product-card">
+            <!-- PRODUCT IMAGE -->
+            <div class="product-image">
+              <img src="<%= product.image || 'https://via.placeholder.com/400x400?text=Product' %>" 
+                   alt="<%= product.name %>">
+              <% if (product.tag) { %>
+                <span class="product-badge"><%= product.tag %></span>
+              <% } %>
+            </div>
+
+            <!-- PRODUCT INFO -->
+            <div class="product-info">
+              <h6 class="product-name"><%= product.name %></h6>
+              
+              <!-- RATING -->
+              <div class="product-rating">
+                <div class="stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star-half-alt"></i>
+                </div>
+                <span>(128 reviews)</span>
+              </div>
+
+              <!-- PRICE -->
+              <div class="product-price">
+                ₹<%= product.price.toLocaleString() %>
+                <span class="product-price-original">₹<%= (product.price * 1.2).toLocaleString() %></span>
+              </div>
+
+              <!-- ACTIONS -->
+              <div class="product-actions">
+                <a href="/add-to-cart/<%= product._id %>" class="btn-cart">
+                  <i class="fas fa-shopping-cart"></i> Add
+                </a>
+                <button class="btn-wishlist" title="Add to Wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <a href="/product/<%= product._id %>" style="flex: 1; padding: 0.75rem; background: var(--bg-light); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; text-decoration: none; color: var(--text-dark); transition: var(--transition);" onmouseover="this.style.background='var(--primary-lighter)'; this.style.color='white';" onmouseout="this.style.background='var(--bg-light)'; this.style.color='var(--text-dark)';">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </div>
+
+              <!-- ADMIN ACTIONS -->
+              <% if (user) { %>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                  <a href="/edit-product/<%= product._id %>" class="btn-edit" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                  <form action="/delete-product/<%= product._id %>" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn-delete" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

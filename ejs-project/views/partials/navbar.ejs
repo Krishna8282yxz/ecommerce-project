@@ -1,0 +1,90 @@
+<div class="navbar-wrapper">
+  <div class="container">
+    <nav class="navbar">
+      <!-- BRAND -->
+      <a href="/" class="navbar-brand">
+        <i class="fas fa-shopping-bag"></i> Premium Store
+      </a>
+
+      <!-- SEARCH BAR -->
+      <div class="navbar-search">
+        <form action="/" method="GET" class="search-bar">
+          <input type="text" name="search" placeholder="Search products..." />
+          <button type="submit" title="Search">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- ACTIONS & MENU -->
+      <div class="navbar-actions">
+        <!-- WISHLIST -->
+        <button class="nav-icon-btn" title="Wishlist">
+          <i class="far fa-heart"></i>
+          <span class="cart-badge">0</span>
+        </button>
+
+        <!-- CART -->
+        <a href="/cart" class="nav-icon-btn" title="Shopping Cart">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-badge"><%= cartCount %></span>
+        </a>
+
+        <!-- THEME TOGGLE -->
+        <button class="nav-icon-btn" onclick="toggleDark()" title="Toggle Theme">
+          <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- USER MENU -->
+        <div class="profile-dropdown">
+          <% if (user) { %>
+            <!-- LOGGED IN -->
+            <button class="nav-icon-btn">
+              <i class="fas fa-user"></i>
+              <span><%= user %></span>
+            </button>
+            <div class="dropdown-menu">
+              <a href="/my-orders" class="dropdown-item">
+                <i class="fas fa-box"></i> My Orders
+              </a>
+              <a href="/add-product" class="dropdown-item">
+                <i class="fas fa-plus"></i> Add Product
+              </a>
+              <a href="/logout" class="dropdown-item">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </div>
+          <% } else { %>
+            <!-- NOT LOGGED IN -->
+            <button class="nav-icon-btn">
+              <i class="fas fa-user"></i>
+            </button>
+            <div class="dropdown-menu">
+              <a href="/login" class="dropdown-item">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+              <a href="/register" class="dropdown-item">
+                <i class="fas fa-user-plus"></i> Sign Up
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<script>
+  // Toggle dropdown on click
+  document.querySelector('.profile-dropdown button').addEventListener('click', function () {
+    document.querySelector('.profile-dropdown').classList.toggle('active');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function (event) {
+    const dropdown = document.querySelector('.profile-dropdown');
+    if (dropdown && !dropdown.contains(event.target)) {
+      dropdown.classList.remove('active');
+    }
+  });
+</script>

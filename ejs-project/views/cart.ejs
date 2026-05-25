@@ -1,0 +1,132 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<div class="container" style="padding: 40px 0;">
+  <!-- PAGE TITLE -->
+  <div style="margin-bottom: 2rem;">
+    <h1><i class="fas fa-shopping-cart"></i> Your Shopping Cart</h1>
+    <p style="color: var(--text-muted);">Review and manage your items</p>
+  </div>
+
+  <% let subtotal = 0; %>
+  <% let cartLength = cart.length; %>
+
+  <% if (cartLength === 0) { %>
+    <!-- EMPTY CART -->
+    <div class="empty-state" style="padding: 80px 20px;">
+      <div class="empty-state-icon">🛒</div>
+      <h3 class="empty-state-title">Your Cart is Empty</h3>
+      <p class="empty-state-text">Add some items to get started with your shopping journey.</p>
+      <a href="/" class="btn-primary">
+        <i class="fas fa-shopping-bag"></i> Continue Shopping
+      </a>
+    </div>
+
+  <% } else { %>
+    <!-- CART CONTENT -->
+    <div class="cart-container">
+      <!-- CART ITEMS -->
+      <div class="cart-items">
+        <% cart.forEach((item, index) => { %>
+          <div class="cart-item">
+            <!-- IMAGE -->
+            <div class="cart-item-image">
+              <img src="<%= item.image || 'https://via.placeholder.com/120' %>" 
+                   alt="<%= item.name %>">
+            </div>
+
+            <!-- DETAILS -->
+            <div class="cart-item-details">
+              <div class="cart-item-name"><%= item.name %></div>
+              <div style="color: var(--text-muted); font-size: 0.9rem;">
+                SKU: <%= item._id.substring(0, 8) %>
+              </div>
+              
+              <!-- QUANTITY CONTROL -->
+              <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.75rem;">
+                <span style="color: var(--text-muted); font-size: 0.9rem;">Quantity:</span>
+                <div class="quantity-control">
+                  <button type="button" onclick="updateQuantity(<%= index %>, <%= item.qty - 1 %>)">−</button>
+                  <div class="quantity-value"><%= item.qty %></div>
+                  <button type="button" onclick="updateQuantity(<%= index %>, <%= item.qty + 1 %>)">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PRICE & ACTION -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1rem;">
+              <div class="cart-item-price">
+                ₹<%= (item.price * item.qty).toLocaleString() %>
+              </div>
+              <a href="/remove/<%= index %>" class="btn-remove">
+                <i class="fas fa-trash"></i> Remove
+              </a>
+            </div>
+          </div>
+          <% subtotal += item.price * item.qty; %>
+        <% }); %>
+      </div>
+
+      <!-- SUMMARY CARD -->
+      <div class="cart-summary">
+        <div class="summary-title">Order Summary</div>
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>₹<%= subtotal.toLocaleString() %></span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span style="color: var(--success);">
+            <% if (subtotal > 5000) { %>
+              FREE
+            <% } else { %>
+              ₹100
+            <% } %>
+          </span>
+        </div>
+
+        <div class="summary-row">
+          <span>Tax (18% GST)</span>
+          <span>₹<%= Math.round(subtotal * 0.18).toLocaleString() %></span>
+        </div>
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span style="color: var(--accent);">₹<%= (subtotal + (subtotal > 5000 ? 0 : 100) + Math.round(subtotal * 0.18)).toLocaleString() %></span>
+        </div>
+
+        <!-- PROMO CODE -->
+        <div style="margin: 1.5rem 0; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+          <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Promo Code</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" placeholder="Enter code" class="form-input" style="margin: 0; flex: 1;">
+            <button class="btn-primary" style="margin: 0;">Apply</button>
+          </div>
+        </div>
+
+        <!-- CHECKOUT BUTTON -->
+        <a href="/checkout" class="checkout-btn">
+          <i class="fas fa-arrow-right"></i> Proceed to Checkout
+        </a>
+
+        <!-- CONTINUE SHOPPING -->
+        <a href="/" style="display: block; text-align: center; margin-top: 1rem; color: var(--accent); font-weight: 600; text-decoration: none;">
+          ← Continue Shopping
+        </a>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  function updateQuantity(index, newQty) {
+    if (newQty < 1) return;
+    // This would require a backend API to update quantity
+    // For now, we'll just update the cart by redirecting
+    console.log('Update quantity:', index, newQty);
+  }
+</script>
+
+<%- include('partials/footer') %>
