@@ -37,6 +37,10 @@ app.use("/api/auth", auth);
 const payment = require("./routes/payment");
 app.use("/api/payment", payment);
 
+app.get("/", (req, res) => {
+  res.send("🚀 Ecommerce Backend is Running Successfully");
+}); 
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
