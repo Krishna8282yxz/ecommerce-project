@@ -125,10 +125,12 @@
 </div>
 
 <script>
+  const backendUrl = "<%= backendUrl %>";
+
   function cancelOrder(orderId) {
     if (!confirm('Are you sure you want to cancel this order?')) return;
 
-    fetch(`http://localhost:5000/api/payment/cancel-order/${orderId}`, {
+    fetch(`${backendUrl}/api/payment/cancel-order/${orderId}`, {
       method: "POST",
       headers: {
         "auth-token": "<%= token %>",

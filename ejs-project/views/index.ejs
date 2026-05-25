@@ -58,8 +58,8 @@
 
     <!-- ALERT -->
     <% if (message) { %>
-      <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> <%= message %>
+      <div class="alert <%= messageType === 'error' ? 'alert-danger' : 'alert-success' %>">
+        <i class="fas <%= messageType === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle' %>"></i> <%= message %>
       </div>
     <% } %>
 

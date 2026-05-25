@@ -143,6 +143,7 @@
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
+  const backendUrl = "<%= backendUrl %>";
   const stripePublicKey = "<%= stripePublicKey %>";
   const authToken = "<%= token || '' %>";
   const cart = <%- JSON.stringify(cart) %>;
@@ -203,7 +204,7 @@
         throw new Error("Please fill in all shipping fields.");
       }
 
-      const paymentResponse = await fetch("http://localhost:5000/api/payment/create-payment-intent", {
+      const paymentResponse = await fetch(`${backendUrl}/api/payment/create-payment-intent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -242,7 +243,7 @@
         throw new Error("Payment could not be completed.");
       }
 
-      const verifyResponse = await fetch("http://localhost:5000/api/payment/verify-payment", {
+      const verifyResponse = await fetch(`${backendUrl}/api/payment/verify-payment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

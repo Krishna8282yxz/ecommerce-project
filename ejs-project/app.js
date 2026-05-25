@@ -1,7 +1,12 @@
+require("dotenv").config();
 require("dotenv").config({ path: "../backend/.env" });
 const express = require("express");
 const session = require("express-session"); // ✅ ADD THIS
 const app = express();
+
+const backendUrl =
+  process.env.BACKEND_URL || "https://ecommerce-project-alpw.onrender.com";
+const apiUrl = (path) => `${backendUrl}${path}`;
 
 app.set("view engine", "ejs");
 app.use(express.static("public"));
@@ -30,6 +35,7 @@ app.use((req, res, next) => {
   res.locals.message = req.session.message;
   res.locals.cartCount = req.session.cart.length;
   res.locals.token = req.session.token;
+  res.locals.backendUrl = backendUrl;
   res.locals.stripePublicKey =
     process.env.STRIPE_PUBLIC_KEY || "pk_test_YOUR_STRIPE_PUBLIC_KEY_HERE";
   delete req.session.message;
@@ -48,15 +54,17 @@ const products = [
 // Home + Search
 app.get("/", async (req, res) => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/products/fetchallproducts",
-    );
+    const response = await fetch(apiUrl("/api/products/fetchallproducts"));
     const products = await response.json();
 
     res.render("index", { products });
   } catch (error) {
-    console.log(error);
-    res.send("Error fetching products");
+    console.error("Failed to load products:", error);
+    res.render("index", {
+      products: [],
+      message: "Unable to load products. Please try again later.",
+      messageType: "error",
+    });
   }
 });
 
@@ -89,9 +97,7 @@ app.get("/remove/:index", (req, res) => {
 // ➕ ADD TO CART
 app.get("/add-to-cart/:id", async (req, res) => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/products/fetchallproducts",
-    );
+    const response = await fetch(apiUrl("/api/products/fetchallproducts"));
     const products = await response.json();
 
     const product = products.find((p) => p._id == req.params.id);
@@ -150,7 +156,7 @@ app.get("/register", (req, res) => {
 
 app.post("/register", async (req, res) => {
   try {
-    const response = await fetch("http://localhost:5000/api/auth/createuser", {
+    const response = await fetch(apiUrl("/api/auth/createuser"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -168,7 +174,7 @@ app.post("/register", async (req, res) => {
       req.session.token = data.jwt_token;
       req.session.user = req.body.email;
 
-      const userRes = await fetch("http://localhost:5000/api/auth/getuser", {
+      const userRes = await fetch(apiUrl("/api/auth/getuser"), {
         method: "POST",
         headers: {
           "auth-token": data.jwt_token,
@@ -197,7 +203,7 @@ app.get("/login", (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     // 1. Login API call
-    const response = await fetch("http://localhost:5000/api/auth/login", {
+    const response = await fetch(apiUrl("/api/auth/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,7 +224,7 @@ app.post("/login", async (req, res) => {
     req.session.token = data.jwt_token;
 
     // 3. Fetch user details
-    const userRes = await fetch("http://localhost:5000/api/auth/getuser", {
+    const userRes = await fetch(apiUrl("/api/auth/getuser"), {
       method: "POST",
       headers: {
         "auth-token": data.jwt_token,
@@ -259,23 +265,20 @@ app.post("/add-product", async (req, res) => {
       return res.send("Error: Please login first before adding a product");
     }
 
-    const response = await fetch(
-      "http://localhost:5000/api/products/addproduct",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": req.session.token,
-        },
-        body: JSON.stringify({
-          name: req.body.name,
-          price: req.body.price,
-          description: req.body.description,
-          tag: req.body.tag || "general",
-          image: req.body.image || "",
-        }),
+    const response = await fetch(apiUrl("/api/products/addproduct"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "auth-token": req.session.token,
       },
-    );
+      body: JSON.stringify({
+        name: req.body.name,
+        price: req.body.price,
+        description: req.body.description,
+        tag: req.body.tag || "general",
+        image: req.body.image || "",
+      }),
+    });
 
     const data = await response.json();
 
@@ -297,7 +300,7 @@ app.post("/delete-product/:id", async (req, res) => {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/products/deleteproduct/${req.params.id}`,
+      apiUrl(`/api/products/deleteproduct/${req.params.id}`),
       {
         method: "DELETE",
         headers: {
@@ -323,9 +326,7 @@ app.post("/delete-product/:id", async (req, res) => {
 
 app.get("/edit-product/:id", async (req, res) => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/products/fetchallproducts",
-    );
+    const response = await fetch(apiUrl("/api/products/fetchallproducts"));
     const products = await response.json();
 
     const product = products.find((p) => p._id == req.params.id);
@@ -350,7 +351,7 @@ app.post("/edit-product/:id", async (req, res) => {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/products/updateproduct/${req.params.id}`,
+      apiUrl(`/api/products/updateproduct/${req.params.id}`),
       {
         method: "PUT",
         headers: {
@@ -385,16 +386,14 @@ app.post("/edit-product/:id", async (req, res) => {
 app.get("/product/:id", async (req, res) => {
   try {
     // PRODUCT
-    const productRes = await fetch(
-      "http://localhost:5000/api/products/fetchallproducts",
-    );
+    const productRes = await fetch(apiUrl("/api/products/fetchallproducts"));
     const products = await productRes.json();
 
     const product = products.find((p) => p._id == req.params.id);
 
     // REVIEWS
     const reviewRes = await fetch(
-      `http://localhost:5000/api/reviews/getreviews/${req.params.id}`,
+      apiUrl(`/api/reviews/getreviews/${req.params.id}`),
     );
 
     let reviews = [];
@@ -414,20 +413,17 @@ app.get("/product/:id", async (req, res) => {
 
 app.post("/add-review/:id", async (req, res) => {
   try {
-    await fetch(
-      `http://localhost:5000/api/reviews/addreview/${req.params.id}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": req.session.token, // 🔐 IMPORTANT
-        },
-        body: JSON.stringify({
-          text: req.body.text,
-          rating: req.body.rating,
-        }),
+    await fetch(apiUrl(`/api/reviews/addreview/${req.params.id}`), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "auth-token": req.session.token, // 🔐 IMPORTANT
       },
-    );
+      body: JSON.stringify({
+        text: req.body.text,
+        rating: req.body.rating,
+      }),
+    });
 
     res.redirect(`/product/${req.params.id}`);
   } catch (error) {
@@ -438,15 +434,12 @@ app.post("/add-review/:id", async (req, res) => {
 
 app.post("/delete-review/:id/:productId", async (req, res) => {
   try {
-    await fetch(
-      `http://localhost:5000/api/reviews/deletereview/${req.params.id}`,
-      {
-        method: "DELETE",
-        headers: {
-          "auth-token": req.session.token,
-        },
+    await fetch(apiUrl(`/api/reviews/deletereview/${req.params.id}`), {
+      method: "DELETE",
+      headers: {
+        "auth-token": req.session.token,
       },
-    );
+    });
 
     res.redirect(`/product/${req.params.productId}`);
   } catch (error) {
@@ -457,20 +450,17 @@ app.post("/delete-review/:id/:productId", async (req, res) => {
 
 app.post("/edit-review/:id/:productId", async (req, res) => {
   try {
-    await fetch(
-      `http://localhost:5000/api/reviews/updatereview/${req.params.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": req.session.token,
-        },
-        body: JSON.stringify({
-          text: req.body.text,
-          rating: req.body.rating,
-        }),
+    await fetch(apiUrl(`/api/reviews/updatereview/${req.params.id}`), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "auth-token": req.session.token,
       },
-    );
+      body: JSON.stringify({
+        text: req.body.text,
+        rating: req.body.rating,
+      }),
+    });
 
     res.redirect(`/product/${req.params.productId}`);
   } catch (error) {
@@ -489,15 +479,12 @@ app.get("/order-success", async (req, res) => {
     }
 
     // Fetch order details from backend
-    const response = await fetch(
-      `http://localhost:5000/api/payment/get-order/${orderId}`,
-      {
-        method: "GET",
-        headers: {
-          "auth-token": req.session.token,
-        },
+    const response = await fetch(apiUrl(`/api/payment/get-order/${orderId}`), {
+      method: "GET",
+      headers: {
+        "auth-token": req.session.token,
       },
-    );
+    });
 
     const order = await response.json();
 
@@ -522,15 +509,12 @@ app.get("/my-orders", async (req, res) => {
       return res.redirect("/login");
     }
 
-    const response = await fetch(
-      "http://localhost:5000/api/payment/get-orders",
-      {
-        method: "GET",
-        headers: {
-          "auth-token": req.session.token,
-        },
+    const response = await fetch(apiUrl("/api/payment/get-orders"), {
+      method: "GET",
+      headers: {
+        "auth-token": req.session.token,
       },
-    );
+    });
 
     const orders = await response.json();
 
@@ -546,6 +530,7 @@ app.get("/my-orders", async (req, res) => {
 });
 
 // SERVER
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
