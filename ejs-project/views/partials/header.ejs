@@ -7,7 +7,15 @@
       name="description"
       content="Premium ecommerce store with high-quality products"
     />
-    <title><%= pageTitle || 'Premium Store - Modern Ecommerce' %></title>
+    <title>
+      <%= typeof pageTitle !==
+      'undefined'
+
+      ? pageTitle
+
+      : 'Premium Store - Modern Ecommerce'
+      %>
+    </title>
 
     <!-- Font Awesome Icons -->
     <link

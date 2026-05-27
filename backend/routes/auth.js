@@ -48,6 +48,7 @@ router.post(
       data = {
         user: {
           id: user.id,
+          role: user.role,
         },
       };
       const jwt_token = jwt.sign(data, JWT_SECRET);
@@ -96,6 +97,7 @@ router.post(
       data = {
         user: {
           id: user.id,
+          role: user.role,
         },
       };
 
@@ -114,7 +116,7 @@ router.post(
 
 router.post("/getuser", fetchuser, async (req, res) => {
   try {
-    userId = req.user.id;
+    const userId = req.user.id;
     const user = await User.findById(userId).select("-password");
     res.send(user);
   } catch (error) {
@@ -130,6 +132,12 @@ router.get("/setsession", (req, res) => {
 
 router.get("/getsession", (req, res) => {
   res.send(req.session.user);
+});
+
+router.get("/testrole", fetchuser, (req, res) => {
+  res.json({
+    user: req.user,
+  });
 });
 
 module.exports = router;

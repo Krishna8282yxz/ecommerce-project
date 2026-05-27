@@ -217,9 +217,18 @@
         }),
       });
 
-      const paymentData = await paymentResponse.json();
+      // 🔒 Safe JSON parsing with error handling
+      let paymentData = null;
+      try {
+        paymentData = await paymentResponse.json();
+      } catch (e) {
+        console.error('Failed to parse payment response:', e);
+        const errorText = await paymentResponse.text();
+        throw new Error(`Invalid server response: ${errorText || 'No response body'}`);
+      }
+      
       if (!paymentResponse.ok) {
-        throw new Error(paymentData.error || "Failed to create payment");
+        throw new Error(paymentData?.error || paymentData?.message || `Payment creation failed (${paymentResponse.status})`);
       }
 
       const clientSecret = paymentData.clientSecret;
@@ -257,9 +266,18 @@
         }),
       });
 
-      const verifyData = await verifyResponse.json();
+      // 🔒 Safe JSON parsing with error handling
+      let verifyData = null;
+      try {
+        verifyData = await verifyResponse.json();
+      } catch (e) {
+        console.error('Failed to parse verify response:', e);
+        const errorText = await verifyResponse.text();
+        throw new Error(`Invalid server response: ${errorText || 'No response body'}`);
+      }
+      
       if (!verifyResponse.ok) {
-        throw new Error(verifyData.error || "Payment verification failed");
+        throw new Error(verifyData?.error || verifyData?.message || `Payment verification failed (${verifyResponse.status})`);
       }
 
       showSuccessAlert("✅ Payment successful! Redirecting to order confirmation...");

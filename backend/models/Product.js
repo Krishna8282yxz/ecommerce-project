@@ -5,26 +5,35 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+
   price: {
     type: Number,
     required: true,
   },
+
   description: {
     type: String,
     required: true,
   },
+
   tag: {
     type: String,
     default: "general",
   },
+
   image: {
-  type: String,
-  default: ""
+    type: String,
+    default: "",
   },
-  user: {
+
+  seller: {
     type: mongoose.Schema.Types.ObjectId,
+
     ref: "User",
+
+    required: true,
   },
+
   date: {
     type: Date,
     default: Date.now,

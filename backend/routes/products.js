@@ -3,8 +3,9 @@ const router = express.Router();
 const Product = require("../models/Product");
 const fetchuser = require("../middleware/fetchuser");
 const { addProduct, getProducts } = require("../controllers/productController");
+const roleAuth = require("../middleware/roleAuth");
 //ROUTE:1 Add Product
-router.post("/addproduct", fetchuser, async (req, res) => {
+router.post("/addproduct", fetchuser, roleAuth("seller", "admin"), async (req, res) => {
   try {
     const { name, price, description, tag, image } = req.body;
 
@@ -21,7 +22,7 @@ router.post("/addproduct", fetchuser, async (req, res) => {
       description,
       tag: tag || "general",
       image: image || "",
-      user: req.user.id,
+      seller: req.user.id,
     });
 
     const savedProduct = await product.save();
@@ -46,7 +47,7 @@ router.get("/fetchallproducts", async (req, res) => {
 const mongoose = require("mongoose");
 
 //ROUTE:3 Update product
-router.put("/updateproduct/:id", fetchuser, async (req, res) => {
+router.put("/updateproduct/:id", fetchuser, roleAuth("admin", "seller"), async (req, res) => {
   try {
     const id = req.params.id.trim();
 
@@ -69,7 +70,8 @@ router.put("/updateproduct/:id", fetchuser, async (req, res) => {
     }
 
     //Ownership check
-    if (product.user.toString() !== req.user.id) {
+    if (product.seller.toString() !== req.user.id && req.user.role !== "admin") {
+
       return res
         .status(401)
         .json({ error: "You are not authorized to update this product" });
@@ -89,7 +91,7 @@ router.put("/updateproduct/:id", fetchuser, async (req, res) => {
 });
 
 //ROUTE 4: Delete product
-router.delete("/deleteproduct/:id", fetchuser, async (req, res) => {
+router.delete("/deleteproduct/:id", fetchuser, roleAuth("admin", "seller"), async (req, res) => {
   try {
     const id = req.params.id.trim();
 
@@ -103,7 +105,7 @@ router.delete("/deleteproduct/:id", fetchuser, async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    if (product.user.toString() !== req.user.id) {
+    if (product.seller.toString() !== req.user.id && req.user.role !== "admin") {
       return res
         .status(401)
         .json({ error: "You are not authorized to delete this product" });
@@ -115,6 +117,24 @@ router.delete("/deleteproduct/:id", fetchuser, async (req, res) => {
   } catch (error) {
     console.error("Error deleting product:", error.message);
     res.status(500).json({ error: "Error deleting product: " + error.message });
+  }
+});
+
+//ROUTE 5: Get products by seller
+router.get("/myproducts", fetchuser, roleAuth("seller", "admin"), async(req, res)=>{
+  let products;
+  try {
+    if(req.user.role === "admin"){
+      products = await Product.find();
+      return res.json(products);
+    }
+    else{
+    products = await Product.find({ seller: req.user.id });
+    }
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    res.status(500).json({ error: "Error fetching products: " + error.message });
   }
 });
 
