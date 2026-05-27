@@ -6,8 +6,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchuser = require("../middleware/fetchuser");
 
-const JWT_SECRET =
-  process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET is not set in environment variables.");
+}
 
 // ROUTE 1: creating user -> api/auth/createuser endpoint
 router.post(

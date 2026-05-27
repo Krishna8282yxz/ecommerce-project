@@ -37,19 +37,50 @@
 
         <!-- USER MENU -->
         <div class="profile-dropdown">
-          <% if (user) { %>
+          <% if (user && user.name) { %>
             <!-- LOGGED IN -->
             <button class="nav-icon-btn">
               <i class="fas fa-user"></i>
-              <span><%= user %></span>
+              <span><%= user.name %></span>
             </button>
             <div class="dropdown-menu">
-              <a href="/my-orders" class="dropdown-item">
-                <i class="fas fa-box"></i> My Orders
+              <% const role = (user.role || 'consumer').toLowerCase(); %>
+
+              <!-- Common Home link -->
+              <a href="/" class="dropdown-item">
+                <i class="fas fa-home"></i> Home
               </a>
-              <a href="/add-product" class="dropdown-item">
-                <i class="fas fa-plus"></i> Add Product
-              </a>
+
+              <% if (role === 'consumer') { %>
+                <a href="/products" class="dropdown-item">
+                  <i class="fas fa-th-list"></i> Products
+                </a>
+                <a href="/cart" class="dropdown-item">
+                  <i class="fas fa-shopping-cart"></i> Cart
+                </a>
+                <a href="/my-orders" class="dropdown-item">
+                  <i class="fas fa-box"></i> My Orders
+                </a>
+              <% } else if (role === 'seller') { %>
+                <a href="/my-products" class="dropdown-item">
+                  <i class="fas fa-boxes"></i> My Products
+                </a>
+                <a href="/add-product" class="dropdown-item">
+                  <i class="fas fa-plus"></i> Add Product
+                </a>
+              <% } else if (role === 'admin') { %>
+                <a href="/admin/dashboard" class="dropdown-item">
+                  <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="/admin/products" class="dropdown-item">
+                  <i class="fas fa-box-open"></i> Manage Products
+                </a>
+                <a href="/admin/users" class="dropdown-item">
+                  <i class="fas fa-users-cog"></i> Manage Users
+                </a>
+              <% } %>
+
+              <!-- Logout always shown for logged in users -->
               <a href="/logout" class="dropdown-item">
                 <i class="fas fa-sign-out-alt"></i> Logout
               </a>

@@ -250,6 +250,7 @@ app.post("/register", async (req, res) => {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
+        role: req.body.role || "consumer", // 🔐 Include role, default to consumer
       }),
     });
 
@@ -260,7 +261,6 @@ app.post("/register", async (req, res) => {
     }
 
     req.session.token = result.data.jwt_token;
-    req.session.user = req.body.email;
 
     const userResult = await safeFetch(apiUrl("/api/auth/getuser"), {
       method: "POST",
@@ -269,8 +269,21 @@ app.post("/register", async (req, res) => {
       },
     });
 
-    if (userResult.ok && userResult.data?.name) {
-      req.session.user = userResult.data.name;
+    // 🔐 Store full user object with role
+    if (userResult.ok && userResult.data) {
+      req.session.user = {
+        name: userResult.data.name,
+        email: userResult.data.email,
+        role: userResult.data.role || "consumer",
+        _id: userResult.data._id,
+      };
+    } else {
+      // Fallback if getuser fails
+      req.session.user = {
+        name: req.body.name,
+        email: req.body.email,
+        role: req.body.role || "consumer",
+      };
     }
 
     res.redirect("/");
@@ -315,11 +328,20 @@ app.post("/login", async (req, res) => {
       },
     });
 
-    // 4. Save NAME instead of email
-    if (userResult.ok && userResult.data?.name) {
-      req.session.user = userResult.data.name;
+    // 4. Store full user object with role
+    if (userResult.ok && userResult.data) {
+      req.session.user = {
+        name: userResult.data.name,
+        email: userResult.data.email,
+        role: userResult.data.role || "consumer",
+        _id: userResult.data._id,
+      };
     } else {
-      req.session.user = req.body.email;
+      req.session.user = {
+        name: req.body.email,
+        email: req.body.email,
+        role: "consumer",
+      };
     }
 
     res.redirect("/");
