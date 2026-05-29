@@ -122,19 +122,40 @@ app.use((req, res, next) => {
   if (!req.session.cart) {
     req.session.cart = [];
   }
+  if (!req.session.wishlist) {
+    req.session.wishlist = [];
+  }
   next();
 });
 
 // ✅ GLOBAL MIDDLEWARE (user + message)
 app.use((req, res, next) => {
   res.locals.pageTitle = "Premium Store - Modern Ecommerce";
-  res.locals.user = req.session.user;
-  res.locals.message = req.session.message;
+
+  res.locals.user = req.session.user || null;
+
+  res.locals.message = req.session.message || null;
+
+  // Safe cart
+  req.session.cart = req.session.cart || [];
+
   res.locals.cartCount = req.session.cart.length;
-  res.locals.token = req.session.token;
-  res.locals.backendUrl = backendUrl;
+
+  // Safe wishlist
+  req.session.wishlist = req.session.wishlist || [];
+
+  res.locals.wishlist = req.session.wishlist;
+
+  res.locals.wishlistCount = req.session.wishlist.length;
+
+  res.locals.token = req.session.token || null;
+
+  res.locals.backendUrl = process.env.BACKEND_URL;
+
   res.locals.stripePublicKey = process.env.STRIPE_PUBLIC_KEY;
+
   delete req.session.message;
+
   next();
 });
 
@@ -147,17 +168,46 @@ const products = [
   { id: 3, name: "Shoes", price: 3000, image: "shoes.jpg" },
 ];
 
-// Home + Search
-app.get("/", async (req, res) => {
+// Shared product fetch logic
+const fetchProductsView = async (req, res, viewName = "index") => {
   try {
     const result = await safeFetch(apiUrl("/api/products/fetchallproducts"));
 
     let products = [];
     let message = null;
     let messageType = "info";
+    let searchQuery = req.query.search
+      ? req.query.search.trim().toLowerCase()
+      : "";
 
     if (result.ok && Array.isArray(result.data)) {
       products = result.data;
+
+      // Filter products if search query exists
+      if (searchQuery) {
+        products = products.filter((product) => {
+          const name = product.name ? product.name.toLowerCase() : "";
+          const tag = product.tag ? product.tag.toLowerCase() : "";
+          const description = product.description
+            ? product.description.toLowerCase()
+            : "";
+
+          return (
+            name.includes(searchQuery) ||
+            tag.includes(searchQuery) ||
+            description.includes(searchQuery)
+          );
+        });
+
+        if (products.length === 0) {
+          message = `No products found matching "${req.query.search}". Try searching with different keywords.`;
+          messageType = "warning";
+        } else {
+          message = `Found ${products.length} product(s) matching "${req.query.search}"`;
+          messageType = "info";
+        }
+      }
+
       console.log(`Loaded ${products.length} products`);
     } else if (!result.ok) {
       console.warn("Failed to load products:", result.error);
@@ -169,14 +219,65 @@ app.get("/", async (req, res) => {
       messageType = "error";
     }
 
-    res.render("index", { products, message, messageType });
+    res.render(viewName, { products, message, messageType, searchQuery });
   } catch (error) {
-    console.error("Homepage route error:", error);
-    res.render("index", {
+    console.error("Product fetch error:", error);
+    res.render(viewName, {
       products: [],
       message: "An unexpected error occurred. Please try again later.",
       messageType: "error",
+      searchQuery: "",
     });
+  }
+};
+
+// Home + Search
+app.get("/", async (req, res) => {
+  await fetchProductsView(req, res, "index");
+});
+
+// Products Page
+app.get("/products", async (req, res) => {
+  await fetchProductsView(req, res, "index");
+});
+
+// ✨ SEARCH SUGGESTIONS API (for autocomplete)
+app.get("/api/search-suggestions", async (req, res) => {
+  try {
+    const query = req.query.q ? req.query.q.trim().toLowerCase() : "";
+
+    if (!query || query.length < 2) {
+      return res.json({ suggestions: [] });
+    }
+
+    const result = await safeFetch(apiUrl("/api/products/fetchallproducts"));
+
+    if (!result.ok || !Array.isArray(result.data)) {
+      return res.json({ suggestions: [] });
+    }
+
+    const suggestions = new Set();
+    const products = result.data;
+
+    products.forEach((product) => {
+      const name = product.name ? product.name.toLowerCase() : "";
+      const tag = product.tag ? product.tag.toLowerCase() : "";
+
+      if (name.includes(query)) {
+        suggestions.add(product.name);
+      }
+      if (tag.includes(query)) {
+        suggestions.add(product.tag);
+      }
+    });
+
+    // Convert set to array, limit to 10 suggestions, sort alphabetically
+    const suggestionList = Array.from(suggestions).sort().slice(0, 10);
+
+    res.json({ suggestions: suggestionList });
+  } catch (error) {
+    console.error("Search suggestions error:", error);
+    res.json({ suggestions: [] });
   }
 });
 
@@ -237,6 +338,85 @@ app.get("/add-to-cart/:id", async (req, res) => {
   } catch (error) {
     console.error("Cart error:", error);
     res.send(`Error: Unable to add to cart. ${error.message}`);
+  }
+});
+
+// ❤️ WISHLIST ROUTES
+app.get("/wishlist", (req, res) => {
+  res.render("wishlist", { wishlist: req.session.wishlist });
+});
+
+app.post("/add-to-wishlist/:id", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.json({ ok: false, error: "Please login first" });
+    }
+
+    const result = await safeFetch(apiUrl("/api/products/fetchallproducts"));
+
+    if (!result.ok || !Array.isArray(result.data)) {
+      return res.json({
+        ok: false,
+        error: "Unable to fetch products",
+      });
+    }
+
+    const products = result.data;
+    const product = products.find((p) => p._id == req.params.id);
+
+    if (!product) {
+      return res.json({ ok: false, error: "Product not found" });
+    }
+
+    const existing = req.session.wishlist.find(
+      (item) => item._id == product._id,
+    );
+
+    if (existing) {
+      return res.json({
+        ok: true,
+        message: "Product already in wishlist",
+        inWishlist: true,
+      });
+    }
+
+    req.session.wishlist.push({
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      tag: product.tag,
+    });
+
+    return res.json({
+      ok: true,
+      message: "Added to wishlist",
+      inWishlist: true,
+    });
+  } catch (error) {
+    console.error("Wishlist add error:", error);
+    return res.json({ ok: false, error: error.message });
+  }
+});
+
+app.post("/remove-from-wishlist/:id", (req, res) => {
+  try {
+    const index = req.session.wishlist.findIndex(
+      (item) => item._id == req.params.id,
+    );
+
+    if (index > -1) {
+      req.session.wishlist.splice(index, 1);
+    }
+
+    return res.json({
+      ok: true,
+      message: "Removed from wishlist",
+      inWishlist: false,
+    });
+  } catch (error) {
+    console.error("Wishlist remove error:", error);
+    return res.json({ ok: false, error: error.message });
   }
 });
 

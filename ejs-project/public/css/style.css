@@ -75,16 +75,6 @@ nav a {
     opacity: 0.8;
 }
 
-.dark-mode {
-    background: #121212;
-    color: white;
-}
-
-.dark-mode .card {
-    background: #1e1e1e;
-    color: white;
-}
-
 .product-card {
     transition: 0.3s;
     border-radius: 10px;

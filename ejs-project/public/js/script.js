@@ -1,35 +1,7 @@
 /**
  * Modern Premium Ecommerce - Utility JavaScript
- * Handles animations, interactions, and theme switching
+ * Handles animations, interactions, and user experience
  */
-
-// ========================
-// THEME MANAGEMENT
-// ========================
-
-function toggleDark() {
-  const body = document.body;
-  const isDarkMode = body.getAttribute("data-theme") === "dark";
-
-  if (isDarkMode) {
-    body.removeAttribute("data-theme");
-    body.classList.remove("dark-mode");
-    localStorage.setItem("theme", "light");
-  } else {
-    body.setAttribute("data-theme", "dark");
-    body.classList.add("dark-mode");
-    localStorage.setItem("theme", "dark");
-  }
-}
-
-// Load saved theme
-window.addEventListener("DOMContentLoaded", () => {
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    document.body.setAttribute("data-theme", "dark");
-    document.body.classList.add("dark-mode");
-  }
-});
 
 // ========================
 // ANIMATIONS
@@ -122,17 +94,64 @@ function removeFromCart(index) {
 // WISHLIST MANAGEMENT
 // ========================
 
-function toggleWishlist(event) {
+function toggleWishlist(event, productId) {
+  event.preventDefault();
+  event.stopPropagation();
+
   const btn = event.target.closest("button");
   if (!btn) return;
 
-  btn.classList.toggle("active");
   const isActive = btn.classList.contains("active");
+  const endpoint = isActive ? "/remove-from-wishlist/" : "/add-to-wishlist/";
 
-  showNotification(
-    isActive ? "Added to wishlist!" : "Removed from wishlist!",
-    isActive ? "success" : "info",
-  );
+  fetch(endpoint + productId, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      if (data.ok) {
+        btn.classList.toggle("active");
+
+        // Update heart icon
+        const icon = btn.querySelector("i");
+
+        if (icon) {
+          icon.classList.toggle("far");
+
+          icon.classList.toggle("fas");
+        }
+
+        // LIVE navbar update
+        const wishlistBadge = document.querySelector(".wishlist-count");
+
+        if (wishlistBadge) {
+          let count = parseInt(wishlistBadge.innerText) || 0;
+
+          if (!isActive) {
+            count++;
+          } else {
+            count--;
+          }
+
+          wishlistBadge.innerText = Math.max(0, count);
+        }
+
+        showNotification(data.message, "success");
+      } else {
+        showNotification(
+          "Error: " + (data.error || "Unable to update"),
+          "danger",
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("Wishlist error:", error);
+      showNotification("Error: " + error.message, "danger");
+    });
 }
 
 // ========================
@@ -164,6 +183,98 @@ function searchProducts(query) {
       product.querySelector(".product-name")?.textContent.toLowerCase() || "";
     const isMatch = productName.includes(lowerQuery);
     product.style.display = isMatch ? "block" : "none";
+  });
+}
+
+// ========================
+// SEARCH & AUTOCOMPLETE
+// ========================
+
+let searchSuggestionsCache = {};
+const searchInput = document.querySelector('input[name="search"]');
+
+if (searchInput) {
+  // Create suggestions dropdown
+  const suggestionsContainer = document.createElement("div");
+  suggestionsContainer.className = "search-suggestions";
+  suggestionsContainer.style.cssText = `
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  `;
+
+  // Position relative container for suggestions
+  const searchBarParent = searchInput.parentElement;
+  searchBarParent.style.position = "relative";
+  searchBarParent.appendChild(suggestionsContainer);
+
+  // Fetch suggestions
+  const fetchSuggestions = debounce(async (query) => {
+    if (query.length < 2) {
+      suggestionsContainer.style.display = "none";
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/search-suggestions?q=${encodeURIComponent(query)}`,
+      );
+      const data = await response.json();
+
+      if (data.suggestions && data.suggestions.length > 0) {
+        suggestionsContainer.innerHTML = data.suggestions
+          .map(
+            (suggestion) =>
+              `<div class="suggestion-item" style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" 
+                 onclick="this.parentElement.parentElement.querySelector('input[name=\\\"search\\\"]').value = '${suggestion.replace(/"/g, "&quot;")}'; this.parentElement.parentElement.querySelector('form').submit();"
+                 onmouseover="this.style.background='var(--bg-light)'"
+                 onmouseout="this.style.background='white'">
+                <i class="fas fa-search" style="margin-right: 8px; color: var(--primary);"></i>
+                ${suggestion}
+              </div>`,
+          )
+          .join("");
+        suggestionsContainer.style.display = "block";
+      } else {
+        suggestionsContainer.innerHTML = `
+          <div style="padding: 15px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+            No suggestions found
+          </div>
+        `;
+        suggestionsContainer.style.display = "block";
+      }
+    } catch (error) {
+      console.error("Suggestion fetch error:", error);
+    }
+  }, 300);
+
+  // Listen for input changes
+  searchInput.addEventListener("input", (e) => {
+    fetchSuggestions(e.target.value);
+  });
+
+  // Hide suggestions on blur
+  searchInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      suggestionsContainer.style.display = "none";
+    }, 200);
+  });
+
+  // Show suggestions on focus if input has value
+  searchInput.addEventListener("focus", (e) => {
+    if (e.target.value.length >= 2) {
+      suggestionsContainer.style.display = "block";
+    }
   });
 }
 

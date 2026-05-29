@@ -165,6 +165,41 @@ a:hover {
   color: var(--accent);
 }
 
+/* SEARCH SUGGESTIONS */
+.search-suggestions {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--bg-light);
+}
+
+.search-suggestions::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-suggestions::-webkit-scrollbar-track {
+  background: var(--bg-light);
+}
+
+.search-suggestions::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.suggestion-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
 /* NAVBAR ACTIONS */
 .navbar-actions {
   display: flex;

@@ -41,21 +41,16 @@
       <!-- ACTIONS & MENU -->
       <div class="navbar-actions">
         <!-- WISHLIST -->
-        <button class="nav-icon-btn" title="Wishlist">
+        <a href="/wishlist" class="nav-icon-btn" title="Wishlist">
           <i class="far fa-heart"></i>
-          <span class="cart-badge">0</span>
-        </button>
+          <span class="cart-badge"><%= wishlistCount %></span>
+        </a>
 
         <!-- CART -->
         <a href="/cart" class="nav-icon-btn" title="Shopping Cart">
           <i class="fas fa-shopping-cart"></i>
           <span class="cart-badge"><%= cartCount %></span>
         </a>
-
-        <!-- THEME TOGGLE -->
-        <button class="nav-icon-btn" onclick="toggleDark()" title="Toggle Theme">
-          <i class="fas fa-moon"></i>
-        </button>
 
         <!-- USER MENU -->
         <div class="profile-dropdown">

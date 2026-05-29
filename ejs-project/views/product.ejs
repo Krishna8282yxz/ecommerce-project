@@ -113,10 +113,12 @@
         <a href="/add-to-cart/<%= product._id %>" class="btn-primary" style="padding: 1rem; text-align: center; border-radius: 12px; font-weight: 700; font-size: 1rem;">
           <i class="fas fa-shopping-cart"></i> Add to Cart
         </a>
-        <button style="padding: 1rem; background: var(--bg-light); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: 700; transition: var(--transition);" 
+        <% const inWishlist = wishlist && wishlist.some(item => item._id.toString() === product._id.toString()); %>
+        <button style="padding: 1rem; background: var(--bg-light); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: 700; transition: var(--transition); color: <%= inWishlist ? 'var(--accent)' : 'var(--text-dark)' %>;" 
+                onclick="toggleWishlist(event, '<%= product._id %>')"
                 onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'" 
-                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-dark)'">
-          <i class="far fa-heart"></i> Add to Wishlist
+                onmouseout="this.style.borderColor='var(--border)'; this.style.color='<%= inWishlist ? 'var(--accent)' : 'var(--text-dark)' %>'">
+          <i class="<%= inWishlist ? 'fas' : 'far' %> fa-heart"></i> <%= inWishlist ? 'In Wishlist' : 'Add to Wishlist' %>
         </button>
       </div>
 
