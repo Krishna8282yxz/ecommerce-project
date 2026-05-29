@@ -136,13 +136,26 @@
         "auth-token": "<%= token %>",
       },
     })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      .then(async (res) => {
+        let data = null;
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = await res.json();
+          } catch (parseError) {
+            console.error('Failed to parse cancel order response:', parseError);
+            throw new Error('Invalid server response');
+          }
+        } else {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}: ${res.statusText}`);
         }
-        return res.json().catch(() => {
-          throw new Error('Invalid server response');
-        });
+
+        if (!res.ok) {
+          throw new Error(data.error || data.message || `HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        return data;
       })
       .then((data) => {
         if (data.success || data.message === 'Order cancelled successfully') {

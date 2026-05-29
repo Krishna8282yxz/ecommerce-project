@@ -121,8 +121,8 @@
                 </a>
               </div>
 
-              <!-- ADMIN ACTIONS -->
-              <% if (user) { %>
+              <% const isOwner = user && user._id && product.seller && product.seller.toString ? product.seller.toString() === user._id.toString() : false; %>
+              <% if (user && (user.role === 'admin' || (user.role === 'seller' && isOwner))) { %>
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
                   <a href="/edit-product/<%= product._id %>" class="btn-edit" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
                     <i class="fas fa-edit"></i> Edit

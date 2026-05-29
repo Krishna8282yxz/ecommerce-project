@@ -6,10 +6,13 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchuser = require("../middleware/fetchuser");
 
-const JWT_SECRET = process.env.JWT_SECRET;
+let JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  console.error("FATAL: JWT_SECRET is not set in environment variables.");
+  console.warn(
+    "WARNING: JWT_SECRET is not set in environment variables. Using development fallback. Set JWT_SECRET in your .env for production.",
+  );
+  JWT_SECRET = "dev_jwt_secret_change_me"; // dev fallback to avoid crashes during local development
 }
 
 // ROUTE 1: creating user -> api/auth/createuser endpoint
@@ -41,11 +44,16 @@ router.post(
 
       const salt = await bcrypt.genSalt(10);
       const securepassword = await bcrypt.hash(req.body.password, salt);
+      const requestedRole = req.body.role;
+      const role = ["consumer", "seller"].includes(requestedRole)
+        ? requestedRole
+        : "consumer";
 
       user = await User.create({
         name: req.body.name,
         email: req.body.email,
         password: securepassword,
+        role,
       });
 
       data = {

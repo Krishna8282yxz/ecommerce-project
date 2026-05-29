@@ -13,9 +13,11 @@ function toggleDark() {
 
   if (isDarkMode) {
     body.removeAttribute("data-theme");
+    body.classList.remove("dark-mode");
     localStorage.setItem("theme", "light");
   } else {
     body.setAttribute("data-theme", "dark");
+    body.classList.add("dark-mode");
     localStorage.setItem("theme", "dark");
   }
 }
@@ -25,6 +27,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
     document.body.setAttribute("data-theme", "dark");
+    document.body.classList.add("dark-mode");
   }
 });
 

@@ -16,6 +16,28 @@
         </form>
       </div>
 
+      <!-- ROLE NAV LINKS -->
+      <div class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <% const role = user && user.role ? user.role.toLowerCase() : null; %>
+        <% if (!user) { %>
+          <a href="/" class="nav-link">Products</a>
+          <a href="/login" class="nav-link">Login</a>
+          <a href="/register" class="nav-link">Register</a>
+        <% } else if (role === 'consumer') { %>
+          <a href="/" class="nav-link">Products</a>
+          <a href="/cart" class="nav-link">Cart</a>
+          <a href="/my-orders" class="nav-link">My Orders</a>
+        <% } else if (role === 'seller') { %>
+          <a href="/my-products" class="nav-link">My Products</a>
+          <a href="/add-product" class="nav-link">Add Product</a>
+        <% } else if (role === 'admin') { %>
+          <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+          <a href="/admin/products" class="nav-link">Manage Products</a>
+          <a href="/admin/users" class="nav-link">Manage Users</a>
+        <% } %>
+      </div>
+
       <!-- ACTIONS & MENU -->
       <div class="navbar-actions">
         <!-- WISHLIST -->

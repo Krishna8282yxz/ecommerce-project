@@ -3,8 +3,10 @@ const express = require("express");
 const session = require("express-session"); // ✅ ADD THIS
 const app = express();
 
-const backendUrl =
-  process.env.BACKEND_URL || "https://ecommerce-project-alpw.onrender.com";
+const backendUrl = process.env.BACKEND_URL;
+if (!backendUrl) {
+  throw new Error("BACKEND_URL must be set in environment variables");
+}
 const apiUrl = (path) => `${backendUrl}${path}`;
 
 // 🔒 SAFE FETCH HELPER - Handles errors without JSON parsing crashes
@@ -82,6 +84,38 @@ app.use(
     saveUninitialized: true,
   }),
 );
+
+const normalizeRole = (req) => {
+  return req.session?.user?.role?.toString().toLowerCase() || null;
+};
+
+const requireLogin = (req, res, next) => {
+  if (!req.session.user) {
+    req.session.message = "Access denied";
+    return res.redirect("/");
+  }
+  next();
+};
+
+const requireRoles =
+  (...allowedRoles) =>
+  (req, res, next) => {
+    const role = normalizeRole(req);
+    if (!role || !allowedRoles.includes(role)) {
+      req.session.message = "Access denied";
+      return res.redirect("/");
+    }
+    next();
+  };
+
+const requireConsumer = (req, res, next) => {
+  const role = normalizeRole(req);
+  if (role !== "consumer") {
+    req.session.message = "Access denied";
+    return res.redirect("/");
+  }
+  next();
+};
 
 // ✅ CART INITIALIZATION
 app.use((req, res, next) => {
@@ -162,7 +196,7 @@ app.post("/submit", (req, res) => {
 });
 
 // 🛒 VIEW CART
-app.get("/cart", (req, res) => {
+app.get("/cart", requireConsumer, (req, res) => {
   res.render("cart", { cart: req.session.cart });
 });
 
@@ -207,9 +241,10 @@ app.get("/add-to-cart/:id", async (req, res) => {
 });
 
 // checkout page
-app.get("/checkout", (req, res) => {
+app.get("/checkout", requireConsumer, (req, res) => {
   if (!req.session.token) {
-    return res.redirect("/login");
+    req.session.message = "Access denied";
+    return res.redirect("/");
   }
 
   if (!req.session.cart || req.session.cart.length === 0) {
@@ -280,6 +315,7 @@ app.post("/register", async (req, res) => {
     } else {
       // Fallback if getuser fails
       req.session.user = {
+        _id: null,
         name: req.body.name,
         email: req.body.email,
         role: req.body.role || "consumer",
@@ -338,6 +374,7 @@ app.post("/login", async (req, res) => {
       };
     } else {
       req.session.user = {
+        _id: null,
         name: req.body.email,
         email: req.body.email,
         role: "consumer",
@@ -357,11 +394,11 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.get("/add-product", (req, res) => {
+app.get("/add-product", requireRoles("seller", "admin"), (req, res) => {
   res.render("addproduct");
 });
 
-app.post("/add-product", async (req, res) => {
+app.post("/add-product", requireRoles("seller", "admin"), async (req, res) => {
   try {
     // Validation
     if (!req.body.name || !req.body.price || !req.body.description) {
@@ -399,94 +436,106 @@ app.post("/add-product", async (req, res) => {
   }
 });
 
-app.post("/delete-product/:id", async (req, res) => {
-  try {
-    if (!req.session.token) {
-      return res.send("Error: Please login first");
-    }
+app.post(
+  "/delete-product/:id",
+  requireRoles("seller", "admin"),
+  async (req, res) => {
+    try {
+      if (!req.session.token) {
+        return res.send("Error: Please login first");
+      }
 
-    const result = await safeFetch(
-      apiUrl(`/api/products/deleteproduct/${req.params.id}`),
-      {
-        method: "DELETE",
-        headers: {
-          "auth-token": req.session.token,
+      const result = await safeFetch(
+        apiUrl(`/api/products/deleteproduct/${req.params.id}`),
+        {
+          method: "DELETE",
+          headers: {
+            "auth-token": req.session.token,
+          },
         },
-      },
-    );
-
-    if (!result.ok) {
-      return res.send(`Error: ${result.error || "Failed to delete product"}`);
-    }
-
-    res.redirect("/");
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    res.send(`Error: Failed to delete product. ${error.message}`);
-  }
-});
-
-app.get("/edit-product/:id", async (req, res) => {
-  try {
-    const result = await safeFetch(apiUrl("/api/products/fetchallproducts"));
-
-    if (!result.ok || !Array.isArray(result.data)) {
-      console.error("Failed to fetch products:", result.error);
-      return res.send(
-        `Error: Unable to load product. ${result.error || "Products unavailable"}`,
       );
+
+      if (!result.ok) {
+        return res.send(`Error: ${result.error || "Failed to delete product"}`);
+      }
+
+      res.redirect("/");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.send(`Error: Failed to delete product. ${error.message}`);
     }
+  },
+);
 
-    const products = result.data;
-    const product = products.find((p) => p._id == req.params.id);
+app.get(
+  "/edit-product/:id",
+  requireRoles("seller", "admin"),
+  async (req, res) => {
+    try {
+      const result = await safeFetch(apiUrl("/api/products/fetchallproducts"));
 
-    if (!product) return res.send("Error: Product not found");
+      if (!result.ok || !Array.isArray(result.data)) {
+        console.error("Failed to fetch products:", result.error);
+        return res.send(
+          `Error: Unable to load product. ${result.error || "Products unavailable"}`,
+        );
+      }
 
-    res.render("editproduct", { product });
-  } catch (error) {
-    console.error("Error loading edit page:", error);
-    res.send(`Error: Unable to load product. ${error.message}`);
-  }
-});
+      const products = result.data;
+      const product = products.find((p) => p._id == req.params.id);
 
-app.post("/edit-product/:id", async (req, res) => {
-  try {
-    if (!req.session.token) {
-      return res.send("Error: Please login first");
+      if (!product) return res.send("Error: Product not found");
+
+      res.render("editproduct", { product });
+    } catch (error) {
+      console.error("Error loading edit page:", error);
+      res.send(`Error: Unable to load product. ${error.message}`);
     }
+  },
+);
 
-    if (!req.body.name || !req.body.price || !req.body.description) {
-      return res.send("Error: Name, price, and description are required");
-    }
+app.post(
+  "/edit-product/:id",
+  requireRoles("seller", "admin"),
+  async (req, res) => {
+    try {
+      if (!req.session.token) {
+        return res.send("Error: Please login first");
+      }
 
-    const result = await safeFetch(
-      apiUrl(`/api/products/updateproduct/${req.params.id}`),
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": req.session.token,
+      if (!req.body.name || !req.body.price || !req.body.description) {
+        return res.send("Error: Name, price, and description are required");
+      }
+
+      const result = await safeFetch(
+        apiUrl(`/api/products/updateproduct/${req.params.id}`),
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": req.session.token,
+          },
+          body: JSON.stringify({
+            name: req.body.name,
+            price: Number(req.body.price),
+            description: req.body.description,
+            tag: req.body.tag || "general",
+            image: req.body.image || "",
+          }),
         },
-        body: JSON.stringify({
-          name: req.body.name,
-          price: Number(req.body.price),
-          description: req.body.description,
-          tag: req.body.tag || "general",
-          image: req.body.image || "",
-        }),
-      },
-    );
+      );
 
-    if (!result.ok) {
-      return res.send(`Error: ${result.error || "Failed to update product"}`);
+      if (!result.ok) {
+        return res.send(`Error: ${result.error || "Failed to update product"}`);
+      }
+
+      res.redirect("/");
+    } catch (error) {
+      console.error("Error updating product:", error);
+      res.send(`Error: Failed to update product. ${error.message}`);
     }
-
-    res.redirect("/");
-  } catch (error) {
-    console.error("Error updating product:", error);
-    res.send(`Error: Failed to update product. ${error.message}`);
-  }
-});
+  },
+);
 
 app.get("/product/:id", async (req, res) => {
   try {
@@ -529,7 +578,7 @@ app.get("/product/:id", async (req, res) => {
   }
 });
 
-app.post("/add-review/:id", async (req, res) => {
+app.post("/add-review/:id", requireConsumer, async (req, res) => {
   try {
     if (!req.session.token) {
       return res.send("Error: Please login to add a review");
@@ -561,7 +610,7 @@ app.post("/add-review/:id", async (req, res) => {
   }
 });
 
-app.post("/delete-review/:id/:productId", async (req, res) => {
+app.post("/delete-review/:id/:productId", requireConsumer, async (req, res) => {
   try {
     if (!req.session.token) {
       return res.send("Error: Please login to delete a review");
@@ -588,7 +637,7 @@ app.post("/delete-review/:id/:productId", async (req, res) => {
   }
 });
 
-app.post("/edit-review/:id/:productId", async (req, res) => {
+app.post("/edit-review/:id/:productId", requireConsumer, async (req, res) => {
   try {
     if (!req.session.token) {
       return res.send("Error: Please login to edit a review");
@@ -660,10 +709,11 @@ app.get("/order-success", async (req, res) => {
 });
 
 // My Orders Page
-app.get("/my-orders", async (req, res) => {
+app.get("/my-orders", requireConsumer, async (req, res) => {
   try {
     if (!req.session.token) {
-      return res.redirect("/login");
+      req.session.message = "Access denied";
+      return res.redirect("/");
     }
 
     const result = await safeFetch(apiUrl("/api/payment/get-orders"), {
@@ -685,6 +735,44 @@ app.get("/my-orders", async (req, res) => {
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.render("my-orders", { orders: [] });
+  }
+});
+
+// My Products Page
+app.get("/my-products", requireRoles("seller", "admin"), async (req, res) => {
+  try {
+    if (!req.session.token) {
+      req.session.message = "Access denied";
+      return res.redirect("/");
+    }
+
+    const result = await safeFetch(apiUrl("/api/products/myproducts"), {
+      method: "GET",
+      headers: {
+        "auth-token": req.session.token,
+      },
+    });
+
+    let products = [];
+    let message = null;
+    let messageType = "info";
+
+    if (result.ok && Array.isArray(result.data)) {
+      products = result.data;
+    } else {
+      message = "Unable to load your products. Please try again later.";
+      messageType = "error";
+      console.error("Failed to fetch my products:", result.error);
+    }
+
+    res.render("my-products", { products, message, messageType });
+  } catch (error) {
+    console.error("Error fetching my products:", error);
+    res.render("my-products", {
+      products: [],
+      message: "An unexpected error occurred while loading products.",
+      messageType: "error",
+    });
   }
 });
 

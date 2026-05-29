@@ -120,8 +120,8 @@
         </button>
       </div>
 
-      <!-- ADMIN ACTIONS -->
-      <% if (user) { %>
+      <% const isOwner = user && user._id && product.seller && product.seller.toString ? product.seller.toString() === user._id.toString() : false; %>
+      <% if (user && (user.role === 'admin' || (user.role === 'seller' && isOwner))) { %>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <a href="/edit-product/<%= product._id %>" class="btn-edit" style="padding: 0.75rem; text-align: center; border-radius: 12px; text-decoration: none; font-weight: 600;">
             <i class="fas fa-edit"></i> Edit Product
@@ -193,7 +193,9 @@
         </div>
       </div>
 
-      <!-- REVIEWS LIST -->
+      <% const userRole = user?.role?.toString().toLowerCase() || null; %>
+    <% const canReview = userRole === 'consumer'; %>
+    <!-- REVIEWS LIST -->
       <div>
         <% if (reviews.length === 0) { %>
           <div class="empty-state" style="padding: 40px 0;">
@@ -204,6 +206,7 @@
         <% } else { %>
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             <% reviews.forEach(review => { %>
+              <% const isReviewAuthor = user && userRole === 'consumer' && review.user && review.user._id && user._id && review.user._id.toString() === user._id.toString(); %>
               <div style="background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                   <div>
@@ -217,7 +220,7 @@
                       <% } %>
                     </div>
                   </div>
-                  <% if (user) { %>
+                  <% if (isReviewAuthor) { %>
                     <div style="display: flex; gap: 0.5rem;">
                       <a href="/edit-review/<%= review._id %>/<%= product._id %>" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">
                         <i class="fas fa-edit"></i>
@@ -240,8 +243,8 @@
       </div>
     </div>
 
-    <!-- ADD REVIEW -->
-    <% if (user) { %>
+    <% if (canReview) { %>
+      <!-- ADD REVIEW -->
       <div style="background: var(--bg-light); border-radius: 12px; padding: 2rem; margin-top: 2rem;">
         <h6 style="font-weight: 700; margin-bottom: 1.5rem;">Share Your Experience</h6>
 
@@ -270,7 +273,7 @@
           </button>
         </form>
       </div>
-    <% } else { %>
+    <% } else if (!user) { %>
       <div style="background: var(--bg-light); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-top: 2rem; text-align: center;">
         <p style="color: var(--text-muted); margin: 0;">
           <a href="/login" style="color: var(--accent); font-weight: 600;">Sign in</a> to share your review
