@@ -36,11 +36,22 @@ router.post("/addproduct", fetchuser, roleAuth("seller", "admin"), async (req, r
 //ROUTE:2 Get all products
 router.get("/fetchallproducts", async (req, res) => {
   try {
+    console.log("FETCH PRODUCTS HIT");
+
     const products = await Product.find();
+
+    console.log("Products:", products.length);
+
     res.json(products);
   } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal Server Error");
+    console.error("FULL PRODUCT ERROR:");
+
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+    });
   }
 });
 
