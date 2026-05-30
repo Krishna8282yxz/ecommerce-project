@@ -34,6 +34,11 @@ const ProductSchema = new mongoose.Schema({
     required: true,
   },
 
+  unitsSold: {
+    type: Number,
+    default: 0,
+  },
+
   date: {
     type: Date,
     default: Date.now,

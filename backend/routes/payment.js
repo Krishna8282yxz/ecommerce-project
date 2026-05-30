@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const fetchuser = require("../middleware/fetchuser");
 
 // ROUTE 1: Create Payment Intent
@@ -70,6 +71,17 @@ router.post("/verify-payment", fetchuser, async (req, res) => {
 
     const savedOrder = await newOrder.save();
     await savedOrder.populate("user").populate("items.product");
+
+    // ✅ Increment unitsSold for each product
+    for (const item of orderItems) {
+      if (item.product) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          { $inc: { unitsSold: item.quantity } },
+          { new: true },
+        );
+      }
+    }
 
     res.json({
       success: true,

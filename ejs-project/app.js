@@ -117,6 +117,16 @@ const requireConsumer = (req, res, next) => {
   next();
 };
 
+// ✅ Allow sellers and consumers to purchase (but not admins)
+const requireCanBuy = (req, res, next) => {
+  const role = normalizeRole(req);
+  if (!role || (role !== "consumer" && role !== "seller")) {
+    req.session.message = "Access denied";
+    return res.redirect("/");
+  }
+  next();
+};
+
 // ✅ CART INITIALIZATION
 app.use((req, res, next) => {
   if (!req.session.cart) {
@@ -296,8 +306,8 @@ app.post("/submit", (req, res) => {
   res.send(`Hello ${username}, form submitted successfully!`);
 });
 
-// 🛒 VIEW CART
-app.get("/cart", requireConsumer, (req, res) => {
+// 🛒 VIEW CART (Sellers & Consumers)
+app.get("/cart", requireCanBuy, (req, res) => {
   res.render("cart", { cart: req.session.cart });
 });
 
@@ -420,8 +430,8 @@ app.post("/remove-from-wishlist/:id", (req, res) => {
   }
 });
 
-// checkout page
-app.get("/checkout", requireConsumer, (req, res) => {
+// checkout page (Sellers & Consumers)
+app.get("/checkout", requireCanBuy, (req, res) => {
   if (!req.session.token) {
     req.session.message = "Access denied";
     return res.redirect("/");
@@ -889,7 +899,7 @@ app.get("/order-success", async (req, res) => {
 });
 
 // My Orders Page
-app.get("/my-orders", requireConsumer, async (req, res) => {
+app.get("/my-orders", requireCanBuy, async (req, res) => {
   try {
     if (!req.session.token) {
       req.session.message = "Access denied";

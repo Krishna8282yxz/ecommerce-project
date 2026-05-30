@@ -53,6 +53,11 @@ router.post(
         name: req.body.name,
         email: req.body.email,
         password: securepassword,
+        phone: req.body.phone || "",
+        address: req.body.address || "",
+        city: req.body.city || "",
+        state: req.body.state || "",
+        pincode: req.body.pincode || "",
         role,
       });
 

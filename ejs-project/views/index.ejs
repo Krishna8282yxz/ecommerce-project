@@ -116,13 +116,13 @@
         <!-- RATING -->
         <div class="product-rating">
           <div class="stars">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star-half-alt"></i>
+            <i class="far fa-star" style="color: #ddd;"></i>
+            <i class="far fa-star" style="color: #ddd;"></i>
+            <i class="far fa-star" style="color: #ddd;"></i>
+            <i class="far fa-star" style="color: #ddd;"></i>
+            <i class="far fa-star" style="color: #ddd;"></i>
           </div>
-          <span>(128 reviews)</span>
+          <span><%= product.unitsSold || 0 %> <%= (product.unitsSold === 1) ? 'sale' : 'sales' %></span>
         </div>
 
         <!-- PRICE -->
