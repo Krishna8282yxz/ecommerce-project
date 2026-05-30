@@ -49,11 +49,7 @@
                 ₹<%= product.price.toLocaleString() %>
                 <span class="product-price-original">₹<%= (product.price * 1.2).toLocaleString() %></span>
               </div>
-              <div class="product-actions">
-                <a href="/product/<%= product._id %>" style="flex: 1; padding: 0.75rem; background: var(--bg-light); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; text-decoration: none; color: var(--text-dark); transition: var(--transition);" onmouseover="this.style.background='var(--primary-lighter)'; this.style.color='white';" onmouseout="this.style.background='var(--bg-light)'; this.style.color='var(--text-dark)';">
-                  <i class="fas fa-eye"></i>
-                </a>
-              </div>
+              <div class="product-actions"></div>
               <% const isOwner = user && user._id && product.seller && product.seller.toString ? product.seller.toString() === user._id.toString() : false; %>
               <% if (user && (user.role === 'admin' || (user.role === 'seller' && isOwner))) { %>
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">

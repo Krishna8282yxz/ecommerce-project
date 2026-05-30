@@ -75,70 +75,170 @@
       </div>
     <% } else { %>
       <div class="products-grid">
-        <% products.forEach(product => { %>
-          <div class="product-card">
-            <!-- PRODUCT IMAGE -->
-            <div class="product-image">
-              <img src="<%= product.image || 'https://via.placeholder.com/400x400?text=Product' %>" 
-                   alt="<%= product.name %>">
-              <% if (product.tag) { %>
-                <span class="product-badge"><%= product.tag %></span>
-              <% } %>
-            </div>
+  <% products.forEach(product => { %>
 
-            <!-- PRODUCT INFO -->
-            <div class="product-info">
-              <h6 class="product-name"><%= product.name %></h6>
-              
-              <!-- RATING -->
-              <div class="product-rating">
-                <div class="stars">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star-half-alt"></i>
-                </div>
-                <span>(128 reviews)</span>
-              </div>
+    <div class="product-card">
 
-              <!-- PRICE -->
-              <div class="product-price">
-                ₹<%= product.price.toLocaleString() %>
-                <span class="product-price-original">₹<%= (product.price * 1.2).toLocaleString() %></span>
-              </div>
+      <!-- PRODUCT IMAGE -->
+      <div class="product-image">
 
-              <!-- ACTIONS -->
-              <div class="product-actions">
-                <a href="/add-to-cart/<%= product._id %>" class="btn-cart">
-                  <i class="fas fa-shopping-cart"></i> Add
-                </a>
-                <% const inWishlist = wishlist && wishlist.some(item => item._id.toString() === product._id.toString()); %>
-                <button class="btn-wishlist <%= inWishlist ? 'active' : '' %>" title="<%= inWishlist ? 'Remove from' : 'Add to' %> Wishlist" onclick="toggleWishlist(event, '<%= product._id %>')">
-                  <i class="<%= inWishlist ? 'fas' : 'far' %> fa-heart"></i>
-                </button>
-                <a href="/product/<%= product._id %>" style="flex: 1; padding: 0.75rem; background: var(--bg-light); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; text-decoration: none; color: var(--text-dark); transition: var(--transition);" onmouseover="this.style.background='var(--primary-lighter)'; this.style.color='white';" onmouseout="this.style.background='var(--bg-light)'; this.style.color='var(--text-dark)';">
-                  <i class="fas fa-eye"></i>
-                </a>
-              </div>
+        <a href="/product/<%= product._id %>">
+          <img
+            src="<%= product.image || 'https://via.placeholder.com/400x400?text=Product' %>"
+            alt="<%= product.name %>"
+          >
+        </a>
 
-              <% const isOwner = user && user._id && product.seller && product.seller.toString ? product.seller.toString() === user._id.toString() : false; %>
-              <% if (user && (user.role === 'admin' || (user.role === 'seller' && isOwner))) { %>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                  <a href="/edit-product/<%= product._id %>" class="btn-edit" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
-                    <i class="fas fa-edit"></i> Edit
-                  </a>
-                  <form action="/delete-product/<%= product._id %>" method="POST" style="flex: 1;">
-                    <button type="submit" class="btn-delete" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; cursor: pointer;">
-                      <i class="fas fa-trash"></i> Delete
-                    </button>
-                  </form>
-                </div>
-              <% } %>
-            </div>
-          </div>
-        <% }); %>
+        <% if (product.tag) { %>
+          <span class="product-badge">
+            <%= product.tag %>
+          </span>
+        <% } %>
+
       </div>
+
+      <!-- PRODUCT INFO -->
+      <div class="product-info">
+
+        <!-- CLICKABLE PRODUCT NAME -->
+        <h6 class="product-name">
+          <a
+            href="/product/<%= product._id %>"
+            style="
+              text-decoration: none;
+              color: inherit;
+            "
+          >
+            <%= product.name %>
+          </a>
+        </h6>
+
+        <!-- RATING -->
+        <div class="product-rating">
+          <div class="stars">
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star-half-alt"></i>
+          </div>
+          <span>(128 reviews)</span>
+        </div>
+
+        <!-- PRICE -->
+        <div class="product-price">
+          ₹<%= product.price.toLocaleString() %>
+          <span class="product-price-original">
+            ₹<%= (product.price * 1.2).toLocaleString() %>
+          </span>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="product-actions">
+
+          <a
+            href="/add-to-cart/<%= product._id %>"
+            class="btn-cart"
+          >
+            <i class="fas fa-shopping-cart"></i>
+            Add
+          </a>
+
+          <% const inWishlist =
+          wishlist &&
+          wishlist.some(
+            item =>
+            item._id.toString()
+            ===
+            product._id.toString()
+          ); %>
+
+          <button
+            class="btn-wishlist <%= inWishlist ? 'active' : '' %>"
+            title="<%= inWishlist ? 'Remove from' : 'Add to' %> Wishlist"
+            onclick="toggleWishlist(event, '<%= product._id %>')"
+          >
+            <i class="<%= inWishlist ? 'fas' : 'far' %> fa-heart"></i>
+          </button>
+
+        </div>
+
+        <!-- SELLER / ADMIN ACTIONS -->
+        <% const isOwner =
+        user &&
+        user._id &&
+        product.seller &&
+        product.seller.toString
+        ?
+        product.seller.toString()
+        ===
+        user._id.toString()
+        :
+        false; %>
+
+        <% if (
+          user &&
+          (
+            user.role === 'admin'
+            ||
+            (
+              user.role === 'seller'
+              &&
+              isOwner
+            )
+          )
+        ) { %>
+
+          <div
+            style="
+              display:flex;
+              gap:0.5rem;
+              margin-top:0.75rem;
+            "
+          >
+
+            <a
+              href="/edit-product/<%= product._id %>"
+              class="btn-edit"
+              style="
+                flex:1;
+                padding:0.5rem;
+                font-size:0.85rem;
+              "
+            >
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+
+            <form
+              action="/delete-product/<%= product._id %>"
+              method="POST"
+              style="flex:1;"
+            >
+              <button
+                type="submit"
+                class="btn-delete"
+                style="
+                  width:100%;
+                  padding:0.5rem;
+                  font-size:0.85rem;
+                  cursor:pointer;
+                "
+              >
+                <i class="fas fa-trash"></i>
+                Delete
+              </button>
+            </form>
+
+          </div>
+
+        <% } %>
+
+      </div>
+    </div>
+
+  <% }); %>
+</div>
     <% } %>
   </div>
 </section>

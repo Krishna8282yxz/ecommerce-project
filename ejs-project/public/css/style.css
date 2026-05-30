@@ -96,3 +96,11 @@ img {
     max-height: 400px;
     object-fit: contain;
 }
+.product-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+.product-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
